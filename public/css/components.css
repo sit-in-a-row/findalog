@@ -1,0 +1,162 @@
+/* components.css */
+
+/* 상단 프로그레스 바 */
+.progress-bar {
+	position: fixed;
+	top: 0;
+	left: 0;
+	height: 5px;
+	width: 0%;
+	opacity: 0;
+	background-color: var(--color-blue);
+	z-index: 9999;
+  
+	/* 기본 transition (필요시 JS에서 수정 가능) */
+	transition: width 2s linear, opacity 0.5s ease-out;
+  }
+
+#post-content {
+	background-color: white;
+    padding: 1.5rem 4rem;
+    line-height: 1.8;
+    word-break: keep-all;
+}
+
+/* 게시글 목록 아이템 */
+.post-item {
+    display: flex;
+    flex-direction: column;
+    background-color: white;
+    padding: 1rem 1.4rem;
+    border-radius: 1rem;
+    cursor: pointer;
+    transition: 0.1s ease-in-out;
+}
+
+.post-item:hover {
+    transform: scale(1.02);
+}
+
+/* 숨김 클래스 */
+.hidden {
+    display: none;
+}
+
+/* components.css */
+
+/* 숨김 클래스 */
+.hidden {
+    display: none;
+}
+
+#landingTitleContainer {
+	font-size: 2.5vw;
+    background-color: transparent;
+    position: absolute;
+    top: 40vh;
+    left: 50vw;
+    transform: translate(-50%, -50%);
+    mix-blend-mode: difference;
+    color: white;
+    line-height: 0.8;
+    user-select: none;
+    letter-spacing: -0.1vw;	
+    transition: 0.1s ease-in-out;
+    /* z-index: -1; */
+}
+.landing-title-row2 {
+    font-size: 8vw;
+    letter-spacing: -0.7vw;
+    line-height: 0.8;
+}
+.ti-cursor {
+    height: 0;
+}
+
+.nav-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    padding: 1vw;
+    z-index: 9999;
+
+    background: transparent;
+    box-shadow: inset 0 -1px 0 0 rgba(0, 0, 0, .1);
+    -webkit-backdrop-filter: saturate(180%) blur(8px);
+    backdrop-filter: saturate(180%) blur(8px);
+}
+.nav-bar h1 {
+    padding: 0 1vw;
+}
+
+.post-tag {
+    padding: 0 0.5rem;
+    border-radius: 0.5rem;
+    color: white;
+}
+.financial_engineering {
+    background-color: rgba(52, 152, 219, 0.5);
+}
+.math {
+    background-color: rgba(219, 205, 52, 0.5);
+}
+
+#blog-h1 {
+    letter-spacing: -0.1rem;
+    font-weight: 500;
+    font-size: 1.8rem;
+    cursor: pointer;
+  
+    /* 그라디언트를 텍스트에 입히기 위해 필요한 설정 */
+    display: inline-block;
+    /* 처음엔 왼쪽 50%는 검정(black), 오른쪽 50%는 파란색(var(--color-blue)) */
+    background: linear-gradient(to right, black 50%, var(--color-blue) 50%);
+    background-size: 200% 100%;
+    background-position: 0 0;
+    -webkit-background-clip: text; /* 사파리/크롬 호환 */
+    -webkit-text-fill-color: transparent; /* 사파리/크롬 호환 */
+    color: transparent; /* 파이어폭스 호환 */
+    transition: background-position 0.5s ease-in-out;
+  }
+  
+  #blog-h1:hover {
+    /* hover 시 그라디언트를 왼쪽으로 당겨, 텍스트 전체가 파란색으로 채워지게 함 */
+    background-position: -100% 0;
+  }
+  
+
+  @media screen and (max-width: 600px) {
+    .post-item {
+      padding: 0.5rem 1rem;
+      margin: 0.5rem 0; 
+    }
+    .post-item h2 {
+      font-size: 1rem; /* 조금 더 작게 */
+    }
+    #post-content {
+      padding: 1rem;  /* 내부 여백도 조금 축소 */
+    }
+
+    .nav-bar {
+        /* width: 50vw; */
+        padding-top: 2vw;
+    }
+
+    #landingTitleContainer {
+        top: 38vw;
+        font-size: 2.5rem;
+    }
+    .landing-title-row2 {
+        font-size: 14vw;
+    }
+
+    .post-list {
+        gap: 0rem;
+    }
+
+    #blog-h1 {
+        padding-left: 1rem;
+    }
+  }
+  

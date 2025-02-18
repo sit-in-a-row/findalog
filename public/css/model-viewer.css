@@ -1,0 +1,17 @@
+.model-viewer {
+    /* z-index: -1; */
+    width: 100%;
+    height: 50vh;
+    top: 0;
+    left: 0;
+    margin-bottom: 1rem;
+    border-radius: 1rem;
+}    
+
+@media screen and (max-width: 600px) {
+    .model-viewer {
+        max-height: 20vh;
+        width: 100%;
+    }
+  }
+  

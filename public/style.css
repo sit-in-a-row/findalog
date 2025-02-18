@@ -1,0 +1,11 @@
+@import url(/css/base.css);
+@import url(/css/layout.css);
+@import url(/css/notion-blocks.css);
+@import url(/css/components.css);
+@import url(/css/animation.css);
+@import url(/css/model-viewer.css);
+
+:root {
+    --color-background: #f5f6fa;
+    --color-blue: #3498db
+}

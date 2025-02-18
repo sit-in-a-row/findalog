@@ -1,0 +1,13 @@
+.clicked-toggle {
+    padding: 2.5rem;
+	transition: 0.1s ease-in-out;
+}
+
+.title-hidden {
+    opacity: 0;
+    transition: 0.1s ease-in-out;
+}
+.modelViewer-hidden {
+    display: none;
+    transition: 1s ease-in-out;
+}

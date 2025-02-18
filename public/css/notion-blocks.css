@@ -1,0 +1,85 @@
+/* notion-blocks.css */
+
+/* 토글 블록 */
+.toggle-block {
+    margin: 0.8rem 0;
+    padding: 1rem;
+    border: 1px solid #dcdde1;
+    border-radius: 5px;
+    background: #fff;
+	transition: 0.1s ease-in-out;
+}
+
+.toggle-block summary {
+    cursor: pointer;
+    font-weight: bold;
+    outline: none;
+}
+
+.toggle-block>div {
+    margin-top: 0.5rem;
+}
+
+/* 블록 인용구 */
+blockquote {
+    margin: 1rem 0;
+    padding: 0.5rem 1rem;
+    border-left: 4px solid #00a8ff;
+    background: #f0f8ff;
+    color: #333;
+}
+
+/* 체크박스 (to_do) */
+.todo-item {
+    display: flex;
+    align-items: center;
+    margin: 0.4rem 0;
+}
+
+/* 수식 (블록 & 인라인) */
+.math-block {
+    text-align: center;
+    margin: 1rem 0;
+    font-weight: bold;
+    overflow: auto;
+}
+
+/* 이미지 */
+.notion-image {
+    max-width: 100%;
+    height: auto;
+    margin: 1rem 0;
+    display: block;
+}
+
+/* 기타 Notion 전용 */
+.unsupported {
+    color: #999;
+    font-style: italic;
+    margin: 1rem 0;
+}
+
+.error {
+    color: red;
+    font-weight: bold;
+}
+
+
+.MathJax {
+    margin: 0;
+}
+
+@media screen and (max-width: 600px) {
+    .toggle-block {
+      margin: 0.5rem 0;
+      padding: 0.5rem;
+    }
+    blockquote {
+      margin: 0.5rem 0;
+      padding: 0.5rem;
+    }
+    .math-block {
+      font-size: 0.9rem; /* 수식 텍스트가 너무 커지지 않도록 */
+    }
+  }
+  

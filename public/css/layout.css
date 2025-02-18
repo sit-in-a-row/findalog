@@ -1,0 +1,109 @@
+/* layout.css */
+body {
+    max-width: 70vw;
+    margin: 2rem auto;
+    padding: 1rem;
+  }
+  
+  .column-list {
+    display: flex;
+    gap: 1rem;
+    margin: 1rem 0;
+  }
+  
+  .column {
+    flex: 1;
+    background: #ffffff;
+    border: 1px solid #dcdde1;
+    border-radius: 6px;
+    padding: 1rem;
+  }
+  
+.post-list-container {
+  margin-top: 3rem;
+  transition: 0.1s ease-in;
+}
+
+.post-list {
+  /* 기본 2열 그리드 */
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem; /* 카드 간격 */
+  transition: 0.1s ease-in-out;
+}
+
+.post-list-info {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+}
+
+/* 게시글 목록 아이템 */
+.post-item {
+  display: flex;
+  flex-direction: column;
+  background-color: white;
+  padding: 1rem 2rem;
+  border-radius: 1rem;
+  cursor: pointer;
+  transition: 0.1s ease-in-out;
+}
+
+.post-item:hover {
+  transform: scale(1.02);
+}
+
+.post-item * {
+  padding: 0;
+}
+
+.post-item h2 {
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.2rem;
+  border-bottom: 1px solid var(--color-background);
+
+  /* 위와 동일한 기법 */
+  background: linear-gradient(to right, #000 50%, var(--color-blue) 50%);
+  background-size: 200% 100%;
+  background-position: 0 0;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  transition: background-position 0.5s ease;
+}
+
+/* 상위 .post-item에 hover되었을 때 h2에 적용 */
+.post-item:hover h2 {
+  background-position: -100% 0;
+}
+
+.post-tags {
+  display: flex;
+  gap: 0.5rem;
+  max-width: 70%;
+  overflow: auto;
+}
+
+/* 모바일 대응: 화면이 일정 폭 이하가 되면 1열로 변경 */
+@media screen and (max-width: 600px) {
+  .post-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  body {
+    max-width: 100%;
+    margin: 0rem;
+    padding: 0.5rem;
+  }
+
+  /* model-viewer가 너무 크면 스크롤 생길 수 있으니 높이 줄이기 */
+  .model-viewer {
+    height: 30vh; 
+  }
+
+  /* 만약 column-list를 쓰는 곳이 있다면, 1열로 바꿔주기 */
+  .column-list {
+    flex-direction: column;
+  }
+}
