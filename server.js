@@ -8,7 +8,7 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 
 // 정적 파일 서빙
-app.use(express.static("public"));
+app.use(express.static(path.join(__dirname, "public")));
 
 // 전체 글 목록 API
 app.get("/posts", async (req, res) => {

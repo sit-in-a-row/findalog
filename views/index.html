@@ -4,17 +4,16 @@
 <head>
     <meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Notion Blog Example</title>
+    <title>Sit_in_a_row</title>
     <link rel="stylesheet" href="/style.css" />
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css" />
     <!-- MathJax for LaTeX 수식 렌더링 -->
     <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
 
 	<script src="https://unpkg.com/typeit@8.7.1/dist/index.umd.js"></script>
-    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
 
-	<script src="/main.js" type="module"></script>
+	<script type="module" src="/main.mjs"></script>
 </head>
 
 <body>
@@ -46,6 +45,9 @@
 				<div class="update-bar"></div>
 			</div>
 		</model-viewer>
+
+		<div id="tag-list" class="tag-list"></div>
+
 		<div id="post-list" class="post-list">
 
 		</div>

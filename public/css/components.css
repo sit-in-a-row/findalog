@@ -90,11 +90,26 @@
     padding: 0 1vw;
 }
 
-.post-tag {
+.post-tag, .tag_item {
     padding: 0 0.5rem;
     border-radius: 0.5rem;
     color: white;
 }
+.tag-list {
+    margin-bottom: 1rem;
+    display: flex;
+    gap: 0.2rem;
+}
+.tag_item {
+    width: fit-content;
+    cursor: pointer;
+    transition: 0.1s ease-in-out;
+}
+.tag_item:hover {
+    transform: scale(1.02);
+    transition: 0.1s ease-in-out;
+}
+
 .financial_engineering {
     background-color: rgba(52, 152, 219, 0.5);
 }
