@@ -37,11 +37,6 @@
     transform: scale(1.02);
 }
 
-/* 숨김 클래스 */
-.hidden {
-    display: none;
-}
-
 /* components.css */
 
 /* 숨김 클래스 */
@@ -108,13 +103,6 @@
 .tag_item:hover {
     transform: scale(1.02);
     transition: 0.1s ease-in-out;
-}
-
-.financial_engineering {
-    background-color: rgba(52, 152, 219, 0.5);
-}
-.math {
-    background-color: rgba(219, 205, 52, 0.5);
 }
 
 #blog-h1 {

@@ -27,7 +27,6 @@ async function getAllBlocks(blockId) {
     });
 
     allBlocks = allBlocks.concat(response.results);
-
     hasMore = response.has_more;
     startCursor = response.next_cursor;
   }
@@ -38,27 +37,19 @@ async function getAllBlocks(blockId) {
 /**
  * 2) rich_text 배열 → HTML 변환 (일반 텍스트 + 인라인 수식)
  */
-/**
- * rich_text 배열 → HTML 변환
- *   - 일반 텍스트
- *   - 인라인 수식
- *   - bold, italic, underline, strikethrough, code, color 등 annotation 처리
- */
 function parseRichText(richTexts = []) {
   return richTexts
     .map((rt) => {
-      // 1) 인라인 수식 (equation) 처리
+      // 인라인 수식 처리
       if (rt.type === "equation") {
-        // 인라인 수식: \( ... \)
         return `\\(${rt.equation.expression}\\)`;
       }
 
-      // 2) 일반 텍스트
       if (rt.type === "text") {
         let text = rt.text.content ?? "";
-        const { bold, italic, underline, strikethrough, code, color } = rt.annotations;
+        const { bold, italic, underline, strikethrough, code, color } =
+          rt.annotations;
 
-        // (1) 기본 텍스트 꾸밈
         if (bold) {
           text = `<strong>${text}</strong>`;
         }
@@ -75,25 +66,17 @@ function parseRichText(richTexts = []) {
           text = `<code>${text}</code>`;
         }
 
-        // (2) 색상 처리
-        // Notion에는 'red', 'blue', 'green', ... 또는 'red_background' 같은 배경색도 있음
         if (color && color !== "default") {
-          // 배경색
           if (color.endsWith("_background")) {
-            // 예: 'red_background' -> 'red'
             const pureColor = color.replace("_background", "");
             text = `<span style="background-color:${pureColor};">${text}</span>`;
-          }
-          // 텍스트 색상
-          else {
+          } else {
             text = `<span style="color:${color};">${text}</span>`;
           }
         }
-
         return text;
       }
-
-      // 3) mention 등 다른 타입은 간단히 무시(혹은 원하는 대로 처리)
+      // 그 외 타입은 필요에 따라 추가 처리 가능
       return "";
     })
     .join("");
@@ -101,14 +84,64 @@ function parseRichText(richTexts = []) {
 
 /**
  * 3) 블록 배열을 순회하여 HTML로 변환하는 함수 (재귀)
+ *    - 불렛/번호 리스트는 연속된 아이템을 그룹화하여 처리합니다.
  */
 async function blocksToHtml(blocks) {
   let html = "";
+  let i = 0;
 
-  for (const block of blocks) {
+  while (i < blocks.length) {
+    const block = blocks[i];
     const { id, type, has_children } = block;
     const blockData = block[type];
 
+    // 연속된 불렛 리스트 아이템 그룹화
+    if (type === "bulleted_list_item") {
+      let bulletHtml = "";
+      while (i < blocks.length && blocks[i].type === "bulleted_list_item") {
+        const bulletBlock = blocks[i];
+        const bulletText = parseRichText(
+          bulletBlock[bulletBlock.type].rich_text
+        );
+        let bulletChildrenHtml = "";
+        if (bulletBlock.has_children) {
+          const childBlocks = await getAllBlocks(bulletBlock.id);
+          bulletChildrenHtml = await blocksToHtml(childBlocks);
+          if (bulletChildrenHtml.trim()) {
+            bulletChildrenHtml = `<ul>${bulletChildrenHtml}</ul>`;
+          }
+        }
+        bulletHtml += `<li>${bulletText}${bulletChildrenHtml}</li>`;
+        i++;
+      }
+      html += `<ul>${bulletHtml}</ul>`;
+      continue;
+    }
+
+    // 연속된 번호 리스트 아이템 그룹화
+    if (type === "numbered_list_item") {
+      let numberedHtml = "";
+      while (i < blocks.length && blocks[i].type === "numbered_list_item") {
+        const numberedBlock = blocks[i];
+        const numberedText = parseRichText(
+          numberedBlock[numberedBlock.type].rich_text
+        );
+        let numberedChildrenHtml = "";
+        if (numberedBlock.has_children) {
+          const childBlocks = await getAllBlocks(numberedBlock.id);
+          numberedChildrenHtml = await blocksToHtml(childBlocks);
+          if (numberedChildrenHtml.trim()) {
+            numberedChildrenHtml = `<ol>${numberedChildrenHtml}</ol>`;
+          }
+        }
+        numberedHtml += `<li>${numberedText}${numberedChildrenHtml}</li>`;
+        i++;
+      }
+      html += `<ol>${numberedHtml}</ol>`;
+      continue;
+    }
+
+    // 그 외 블록들 처리
     switch (type) {
       case "paragraph": {
         const text = parseRichText(blockData.rich_text);
@@ -130,30 +163,20 @@ async function blocksToHtml(blocks) {
         html += `<h3>${text}</h3>`;
         break;
       }
-      case "bulleted_list_item": {
-        const text = parseRichText(blockData.rich_text);
-        html += `<ul><li>${text}</li></ul>`;
-        break;
-      }
-      case "numbered_list_item": {
-        const text = parseRichText(blockData.rich_text);
-        html += `<ol><li>${text}</li></ol>`;
-        break;
-      }
       case "to_do": {
         const text = parseRichText(blockData.rich_text);
         html += `<div class="todo-item">
-            <input type="checkbox" ${blockData.checked ? "checked" : ""}/>
+            <input type="checkbox" ${
+              blockData.checked ? "checked" : ""
+            }/>
             <span>${text}</span>
           </div>`;
         break;
       }
       case "toggle": {
-        // 토글 블록
         const toggleSummary = parseRichText(blockData.rich_text);
         let toggleChildren = "";
         if (has_children) {
-          // 하위 블록 재귀
           const childBlocks = await getAllBlocks(id);
           toggleChildren = await blocksToHtml(childBlocks);
         }
@@ -172,13 +195,14 @@ async function blocksToHtml(blocks) {
       }
       case "code": {
         const codeText = parseRichText(blockData.rich_text);
-        html += `<pre><code class="language-${blockData.language || "plain"}">
+        html += `<pre><code class="language-${
+          blockData.language || "plain"
+        }">
 ${codeText}
           </code></pre>`;
         break;
       }
       case "equation": {
-        // 블록 수식 (display math)
         html += `<p class="math-block">\\[${blockData.expression}\\]</p>`;
         break;
       }
@@ -187,7 +211,8 @@ ${codeText}
         break;
       }
       case "image": {
-        const imageUrl = blockData.file?.url || blockData.external?.url || "";
+        const imageUrl =
+          blockData.file?.url || blockData.external?.url || "";
         html += `<img src="${imageUrl}" alt="Notion Image" class="notion-image"/>`;
         break;
       }
@@ -209,11 +234,34 @@ ${codeText}
         html += `<div class="column">${columnContent}</div>`;
         break;
       }
+      case "table": {
+        // 테이블 블록 처리
+        let tableHtml = `<table>`;
+        if (has_children) {
+          const tableRows = await getAllBlocks(id);
+          for (const row of tableRows) {
+            if (row.type === "table_row") {
+              let rowHtml = `<tr>`;
+              // 각 셀은 rich_text 객체 배열로 구성됨
+              for (const cell of row.table_row.cells) {
+                const cellContent = parseRichText(cell);
+                rowHtml += `<td>${cellContent}</td>`;
+              }
+              rowHtml += `</tr>`;
+              tableHtml += rowHtml;
+            }
+          }
+        }
+        tableHtml += `</table>`;
+        html += tableHtml;
+        break;
+      }
       default: {
         html += `<div class="unsupported">[${type}] 블록은 아직 지원되지 않습니다.</div>`;
         break;
       }
     }
+    i++;
   }
 
   return html;
@@ -224,9 +272,7 @@ ${codeText}
  */
 async function getPostContent(pageId) {
   try {
-    // 1. 페이지네이션으로 모든 블록 가져오기
     const blocks = await getAllBlocks(pageId);
-    // 2. 블록 배열을 HTML로 변환
     const html = await blocksToHtml(blocks);
     return html;
   } catch (error) {

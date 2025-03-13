@@ -1,12 +1,59 @@
-import { createLandingTitle, hideModelViewer, hideTypeIt, initTypeIt } from "/js/components/landing_title.mjs"
-import { createElement } from "/js/utils/createElement.mjs";
+import {
+    createLandingTitle,
+    hideModelViewer,
+    hideTypeIt,
+    initTypeIt
+} from "/js/components/landing_title.mjs";
+import {
+    createElement
+} from "/js/utils/createElement.mjs";
 
+let is_init = true;
 let tag_list = {};
 
-function main() {
+// 간단한 페이드 아웃/인 헬퍼 함수 (Promise 기반)
+function fadeOut(element, duration = 300) {
+    return new Promise((resolve) => {
+        element.style.transition = `opacity ${duration}ms`;
+        element.style.opacity = 0;
+        setTimeout(() => {
+            resolve();
+        }, duration);
+    });
+}
+
+function fadeIn(element, duration = 300) {
+    return new Promise((resolve) => {
+        element.style.transition = `opacity ${duration}ms`;
+        element.style.opacity = 1;
+        setTimeout(() => {
+            resolve();
+        }, duration);
+    });
+}
+
+async function main() {
     document.body.appendChild(createLandingTitle());
     initTypeIt();
-    loadPosts();
+
+    // blog-h1 클릭 시 홈(목록)으로 돌아가기
+    const blogH1 = document.getElementById("blog-h1");
+    if (blogH1) {
+        blogH1.addEventListener("click", () => {
+            goBack();
+        });
+    }
+
+    // 초기 URL에 따라 로드: "/"이면 목록, "/{postId}"이면 해당 게시글 로드
+    if (window.location.pathname === "/" || window.location.pathname === "") {
+        await loadPosts();
+    } else {
+        const postId = window.location.pathname.slice(1); // '/' 제거
+        history.replaceState({
+            postId
+        }, "", window.location.pathname);
+        await loadPost(postId);
+    }
 }
 
 const progressBar = document.querySelector(".progress-bar");
@@ -16,17 +63,13 @@ function resetProgressBar() {
     progressBar.style.opacity = "0";
 }
 
-// 클릭 직후에 프로그레스바가 0%에서 100%로 차오르는 함수
+// 클릭 직후 0%에서 100%까지 채워지는 프로그레스바 효과
 function startFakeProgress() {
     resetProgressBar();
-    // 먼저 보이도록
     progressBar.style.opacity = "1";
     progressBar.style.width = "0%";
-
     // 강제 리플로우
     progressBar.getBoundingClientRect();
-
-    // 0% -> 100% (2초 동안)
     progressBar.style.transition = "width 2s linear, opacity 0.5s ease-out";
     setTimeout(() => {
         progressBar.style.width = "100%";
@@ -34,148 +77,228 @@ function startFakeProgress() {
 }
 
 function endFakeProgress() {
-    // 요청이 끝난 뒤 약간의 텀을 두고 서서히 사라지게
     setTimeout(() => {
         progressBar.style.opacity = "0";
         setTimeout(() => {
             resetProgressBar();
         }, 500);
-    }, 200); // 원하는 타이밍에 맞춰 조절
+    }, 200);
 }
 
 async function loadPosts() {
-    const res = await fetch("/posts");
-    const posts = await res.json();
+    try {
+        // API 엔드포인트를 /api/posts 로 호출
+        const res = await fetch("/api/posts");
+        const posts = await res.json();
 
-    const listContainer = document.getElementById("post-list");
-    listContainer.innerHTML = "";
+        const listContainer = document.getElementById("post-list");
+        listContainer.innerHTML = "";
+        listContainer.style.display = "grid";
+        // 초기 상태: 투명하게 시작
+        listContainer.style.opacity = 0;
 
-    posts.forEach((post) => {
-        const div = document.createElement("div");
-        div.className = "post-item";
+        posts.forEach((post) => {
+            const div = document.createElement("div");
+            div.className = "post-item";
 
-        const postTitle = createElement('h2', 'post-title', 'post-title');
-        postTitle.innerText = post.title;
-        div.appendChild(postTitle);
+            const postTitle = createElement("h2", "post-title", "post-title");
+            postTitle.innerText = post.title;
+            div.appendChild(postTitle);
 
-        const postListInfo = createElement('div', 'post-list-info', 'post-list-info');
-        const postDate = createElement('p', 'post-date', 'post-date');
-        postDate.innerText = post.date;
-        postListInfo.appendChild(postDate);
-        div.appendChild(postListInfo);
+            const postListInfo = createElement("div", "post-list-info", "post-list-info");
+            const postDate = createElement("p", "post-date", "post-date");
+            postDate.innerText = post.date;
+            postListInfo.appendChild(postDate);
+            div.appendChild(postListInfo);
 
-        const postTags = createElement('div', 'post-tags', 'post-tags');
-        for (let i=0; i<post.tags.length; i++) {
-            const postTag = createElement('div', 'post-tag', `post-tag_${i}`);
-            postTag.innerText = post.tags[i];
-            
-            let tag_type = post.tags[i];
+            const postTags = createElement("div", "post-tags", "post-tags");
+            post.tags.forEach((tag, index) => {
+                const postTag = createElement("div", "post-tag", `post-tag_${index}`);
+                postTag.innerText = tag;
 
-            if (!tag_list[tag_type]) {
-                tag_list[tag_type] = 1; 
-            } else {
-                tag_list[tag_type] += 1; 
-            }           
-            classList_for_tags(tag_type, postTag);
+                if (is_init) {
+                    if (!tag_list[tag]) {
+                        tag_list[tag] = 1;
+                    } 
+                    else {
+                        tag_list[tag] += 1;
+                    }
+                }
 
-            postTags.appendChild(postTag);
-        }
-        postListInfo.appendChild(postTags);
+                classList_for_tags(tag, postTag);
+                postTags.appendChild(postTag);
+            });
+            postListInfo.appendChild(postTags);
 
-//         div.innerHTML = `
-//   <h2>${post.title}</h2>
-//   <div class="post-list-info">
-//     <p>${post.date}</p>
-//     <p>${post.tags.join(", ")}</p>
-//   </div>
-// `;
-        div.addEventListener('click', ()=>{
-            loadPost(`${post.id}`);
-            hideTypeIt();
-        })
-        listContainer.appendChild(div);
-    });
+            // 클릭 시 History API를 이용해 URL 변경 및 게시글 로드
+            div.addEventListener("click", () => {
+                history.pushState({
+                    postId: post.id
+                }, "", "/" + post.id);
+                loadPost(post.id);
+            });
+            listContainer.appendChild(div);
+        });
+        is_init = false;
 
-    onclick="loadPost('${post.id}')"
-
-    document.getElementById('blog-h1').addEventListener('click', () => {
-        goBack();
-    });
-
-    addTagList();
+        await fadeIn(listContainer, 300);
+        addTagList();
+    } catch (error) {
+        console.error("Error loading posts:", error);
+    }
 }
 
 async function loadPost(pageId) {
-
-    // 1) 클릭 직후부터 바가 보이도록
     startFakeProgress();
+    try {
+        // API 엔드포인트 호출: /api/post/{id}
+        const res = await fetch(`/api/post/${pageId}`);
+        if (!res.ok) {
+            // 잘못된 요청이면 URL을 "/"로 변경 후 목록 로드
+            history.replaceState(null, "", "/");
+            await loadPosts();
+            return;
+        }
+        const data = await res.json();
 
+        // 기존 게시글 목록이 보이고 있다면 페이드 아웃 처리
+        const listContainer = document.getElementById("post-list");
+        if (listContainer.style.display !== "none") {
+            await fadeOut(listContainer, 300);
+            listContainer.style.display = "none";
+        }
 
-    // 2) 한 프레임 뒤에 fetch 시작
-    setTimeout(async () => {
-        const res = await fetch(`/post/${pageId}`);
-        const data = await res.json(); // { content: "<p>...</p>" }
-
-        // 본문 표시
-        document.getElementById("post-list").style.display = "none";
         const contentContainer = document.getElementById("post-content");
-        contentContainer.style.display = "block";
         contentContainer.innerHTML = data.content;
+        contentContainer.style.display = "block";
+        contentContainer.style.opacity = 0;
+        await fadeIn(contentContainer, 300);
 
         if (window.MathJax) {
             window.MathJax.typeset();
         }
 
-        var toggles = document.querySelectorAll('.toggle-block');
-        console.log(toggles);
-        for (let i = 0; i < toggles.length; i++) {
-            toggles[i].addEventListener('click', function() {
-                if (this.classList.contains('clicked-toggle')) {
-                    this.classList.remove('clicked-toggle');
-                } else {
-                    this.classList.add('clicked-toggle');
-                }
+        // 토글 블록 클릭 이벤트 처리
+        const toggles = document.querySelectorAll(".toggle-block");
+        toggles.forEach((toggle) => {
+            toggle.addEventListener("click", function() {
+                this.classList.toggle("clicked-toggle");
             });
-        }
-
-        // 3) 로딩 끝 → progressbar 사라짐
+        });
+    } catch (err) {
+        console.error("Error loading post:", err);
+        history.replaceState(null, "", "/");
+        await loadPosts();
+    } finally {
         endFakeProgress();
-
-        hideModelViewer();
-    }, 0);
+    }
 }
 
-function goBack() {
-    hideTypeIt();
-    hideModelViewer();
-    document.getElementById("post-list").style.display = "grid";
-    document.getElementById("post-content").style.display = "none";
+async function goBack() {
+    history.pushState(null, "", "/");
+    const contentContainer = document.getElementById("post-content");
+    await fadeOut(contentContainer, 300);
+    contentContainer.style.display = "none";
+
+    const listContainer = document.getElementById("post-list");
+    listContainer.style.display = "grid";
+    listContainer.style.opacity = 0;
+
+    // post-list 내부 요소가 없으면 loadPosts() 실행
+    if (listContainer.children.length === 0) {
+        await loadPosts();
+    } else {
+        await fadeIn(listContainer, 300);
+    }
 }
 
 function addTagList() {
-    const tagContainer = document.getElementById('tag-list');
-    tagContainer.innerHTML = "";  // 기존 목록 초기화
-    for (let tag in tag_list) {  // 객체 순회
-        const tagDiv = createElement('div', 'tag_item', `tag_item_${tag}`);
-        tagDiv.innerText = `${tag} (${tag_list[tag]})`;  // 태그와 카운트 함께 출력
-        classList_for_tags(tag, tagDiv);
+    const tagContainer = document.getElementById("tag-list");
+    tagContainer.innerHTML = "";
+    
+    // "All" 태그 추가: 클릭 시 모든 게시글이 보임
+    const allTagDiv = createElement("div", "tag_item", "tag_item_All");
+    allTagDiv.innerText = "All";
+    allTagDiv.dataset.tag = "All";
+    allTagDiv.addEventListener("click", function() {
+        // 다른 태그들의 active 제거 후 All 태그 active 설정
+        document.querySelectorAll("#tag-list .tag_item").forEach(item => {
+            item.classList.remove("active");
+        });
+        this.classList.add("active");
+        // 모든 게시글 보이기
+        document.querySelectorAll("#post-list .post-item").forEach(item => {
+            item.style.display = "";
+        });
+    });
+    tagContainer.appendChild(allTagDiv);
+    
+    // 기존 태그 목록 추가
+    for (let tag in tag_list) {
 
+        const tagDiv = createElement("div", "tag_item", `tag_item_${tag}`);
+        tagDiv.innerText = `${tag} (${tag_list[tag]})`;
+        tagDiv.dataset.tag = tag;
+        classList_for_tags(tag, tagDiv);
+        
+        // 태그 클릭 시 필터링 이벤트 추가
+        tagDiv.addEventListener("click", function() {
+            const selectedTag = this.dataset.tag;
+            // 다른 태그의 active 클래스 제거 후 현재 태그에 active 추가
+            document.querySelectorAll("#tag-list .tag_item").forEach(item => {
+                item.classList.remove("active");
+            });
+            this.classList.add("active");
+            
+            // #post-list 내부의 모든 게시글 카드 필터링
+            document.querySelectorAll("#post-list .post-item").forEach(item => {
+                // 카드 내부의 태그들(.post-tag) 검사
+                const tags = item.querySelectorAll(".post-tag");
+                let match = false;
+                tags.forEach(tagEl => {
+                    if (tagEl.innerText.trim() === selectedTag) {
+                        match = true;
+                    }
+                });
+                item.style.display = match ? "" : "none";
+            });
+        });
         tagContainer.appendChild(tagDiv);
     }
 }
 
-function classList_for_tags(switch_main, classList_added) {
-    switch (switch_main) {
-        case 'Financial Engineering':
-            classList_added.classList.add('financial_engineering');
+
+function classList_for_tags(tagName, element) {
+    switch (tagName) {
+        case "Financial Engineering":
+            element.classList.add("financial_engineering");
             break;
-        case 'Math':
-            classList_added.classList.add('math');
+        case "Math":
+            element.classList.add("math");
+            break;
+        case "CFA":
+            element.classList.add("cfa");
+            break;
+        case "MISC":
+            element.classList.add("MISC");
             break;
         default:
-            console.log('main.js에서 태그 추가 필요');
+            console.log("main.mjs에서 태그 추가 필요");
             break;
     }
 }
+
+// 브라우저의 앞으로가기/뒤로가기 이벤트 처리
+window.onpopstate = function(event) {
+    if (window.location.pathname === "/" || window.location.pathname === "") {
+        // post-content를 숨기고, 목록을 다시 로드합니다.
+        const contentContainer = document.getElementById("post-content");
+        contentContainer.style.display = "none";
+        loadPosts();
+    } else {
+        const postId = window.location.pathname.slice(1);
+        loadPost(postId);
+    }
+};
 
 main();

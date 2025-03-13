@@ -9,3 +9,19 @@
     --color-background: #f5f6fa;
     --color-blue: #3498db
 }
+
+#tag_item_All {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+.financial_engineering {
+    background-color: rgba(52, 152, 219, 0.5);
+}
+.math {
+    background-color: rgba(219, 205, 52, 0.5);
+}
+.cfa {
+    background-color: rgba(219, 127, 52, 0.5);
+}
+.MISC {
+    background-color: rgba(219, 52, 124, 0.5);
+}
